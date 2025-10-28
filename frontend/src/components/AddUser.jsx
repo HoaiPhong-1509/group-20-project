@@ -1,37 +1,46 @@
 import React, { useState } from "react";
-import axios from "axios";
+import { createUser } from "../api";
 
-const AddUser = () => {
+export default function AddUser() {
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
 
-  const handleSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
-    if (!name) return alert("Please enter a name");
-
-    axios
-      .post("https://jsonplaceholder.typicode.com/users", { name })
-      .then((res) => {
-        alert("User added successfully!");
-        setName("");
-      })
-      .catch((err) => console.error(err));
+    if (!name.trim() || !email.trim()) return;
+    try {
+      await createUser({ name: name.trim(), email: email.trim() });
+      setName("");
+      setEmail("");
+      window.dispatchEvent(new Event("users-updated"));
+    } catch (err) {
+      console.error(err);
+      alert("Create user failed");
+    }
   };
 
   return (
-    <div>
-      <h2>Add User</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Enter user name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <button type="submit">Add</button>
-      </form>
-    </div>
+    <form
+      onSubmit={onSubmit}
+      style={{
+        display: "flex",
+        gap: 8,
+        justifyContent: "center",
+      }}
+    >
+      <input
+        type="text"
+        placeholder="Enter user name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
+      <input
+        type="email"
+        placeholder="Enter email"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+      <button type="submit">Add</button>
+    </form>
   );
-};
-
-export default AddUser;
-
+}

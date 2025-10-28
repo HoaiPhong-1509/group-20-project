@@ -1,27 +1,29 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
 
-const UserList = () => {
+export default function UserList() {
   const [users, setUsers] = useState([]);
 
+  const load = async () => {
+    const res = await fetch("/users");
+    const data = await res.json();
+    setUsers(data);
+  };
+
   useEffect(() => {
-    // Gọi API lấy danh sách user (thay URL sau này bằng API thật)
-    axios
-      .get("https://jsonplaceholder.typicode.com/users")
-      .then((res) => setUsers(res.data))
-      .catch((err) => console.error(err));
+    load();
+    const h = () => load();
+    window.addEventListener("users-updated", h);
+    return () => window.removeEventListener("users-updated", h);
   }, []);
 
   return (
-    <div>
-      <h2>User List</h2>
-      <ul>
-        {users.map((u) => (
-          <li key={u.id}>{u.name}</li>
-        ))}
-      </ul>
-    </div>
+    <ul style={{ listStyle: "none", padding: 0 }}>
+      {users.map((u) => (
+        <li key={u._id || u.id}>
+          {u.name}
+          {u.email ? ` - ${u.email}` : ""}
+        </li>
+      ))}
+    </ul>
   );
-};
-
-export default UserList;
+}

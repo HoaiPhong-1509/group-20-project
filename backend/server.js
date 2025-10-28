@@ -1,27 +1,30 @@
-// server.js (đã chỉnh chính xác)
 const express = require('express');
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
+const cors = require('cors');
+const path = require('path');
 
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 const app = express();
 app.use(express.json());
+app.use(cors({ origin: 'http://localhost:3000' }));
 
-// ✅ Kết nối MongoDB Atlas
-mongoose.connect("mongodb+srv://sinhvien3:h3622@cluster0.wou1pdj.mongodb.net/groupDB?retryWrites=true&w=majority&appName=Cluster0", {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => console.log("✅ MongoDB connected successfully"))
-.catch((err) => console.error("❌ MongoDB connection error:", err));
+const MONGO_URI = process.env.MONGO_URI;
+if (!MONGO_URI) {
+  console.error('❌ Missing MONGO_URI in backend/.env');
+  process.exit(1);
+}
 
-// Mount user routes
+mongoose
+  .connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('✅ MongoDB connected successfully'))
+  .catch((err) => console.error('❌ MongoDB connection error:', err));
+
 const userRoutes = require('./routes/user');
 app.use('/users', userRoutes);
 
-// Health check
-app.get('/', (req, res) => res.json({ message: 'Server running' }));
+app.get('/', (_req, res) => res.json({ message: 'Server running' }));
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
