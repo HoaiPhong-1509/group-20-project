@@ -3,12 +3,15 @@ const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
+const cookieParser = require('cookie-parser');
 
 dotenv.config({ path: path.join(__dirname, '.env') });
 
 const app = express();
 app.use(express.json());
+app.use(cookieParser());
 app.use(cors({ origin: 'http://localhost:3000' }));
+app.use((req, _res, next) => { console.log('> ' + req.method, req.originalUrl); next(); });
 
 const MONGO_URI = process.env.MONGO_URI;
 if (!MONGO_URI) {
@@ -22,7 +25,9 @@ mongoose
   .catch((err) => console.error('❌ MongoDB connection error:', err));
 
 const userRoutes = require('./routes/user');
+const authRoutes = require('./routes/auth');
 app.use('/users', userRoutes);
+app.use('/auth', authRoutes);
 
 app.get('/', (_req, res) => res.json({ message: 'Server running' }));
 

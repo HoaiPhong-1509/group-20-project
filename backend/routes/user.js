@@ -2,6 +2,7 @@ const express = require('express');
 const User = require('../models/User');
 
 const router = express.Router();
+const userController = require('../controllers/userController');
 
 // GET /users -> lấy tất cả user từ Mongo
 router.get('/', async (_req, res) => {
