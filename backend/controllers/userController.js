@@ -1,23 +1,13 @@
 // controllers/userController.js
-// Mảng tạm lưu users trong bộ nhớ (không bền qua restart)
-let users = [];
-let nextId = 1;
+const User = require('../models/User');
 
-// GET /users
-exports.getUsers = (req, res) => {
-  res.json(users);
-};
-
-// POST /users
-exports.createUser = (req, res) => {
-  const { name, email } = req.body;
-  if (!name || !email) {
-    return res.status(400).json({ error: 'Name and email are required' });
+exports.getUsers = async (_req, res) => {
+  try {
+    const users = await User.find().sort({ createdAt: -1 });
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
   }
-
-  const user = { id: nextId++, name, email };
-  users.push(user);
-  res.status(201).json(user);
 };
 // PUT: sửa user 
 exports.updateUser = (req, res) => { 
@@ -37,8 +27,16 @@ users = users.filter(u => u.id != id);
 res.json({ message: "User deleted" }); 
 };
 
-// (Tùy chọn) export để test nội bộ
-exports._reset = () => {
-  users = [];
-  nextId = 1;
+exports.createUser = async (req, res) => {
+  try {
+    const { name, email } = req.body;
+    if (!name?.trim()) return res.status(400).json({ message: 'Name is required' });
+    const user = await User.create({
+      name: name.trim(),
+      ...(email ? { email: email.trim() } : {})
+    });
+    res.status(201).json(user);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };
