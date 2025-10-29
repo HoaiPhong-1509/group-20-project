@@ -2,6 +2,7 @@ const express = require('express');
 const User = require('../models/User');
 
 const router = express.Router();
+const userController = require('../controllers/userController');
 
 // GET /users -> lấy tất cả user từ Mongo
 router.get('/', async (_req, res) => {
@@ -14,15 +15,7 @@ router.get('/', async (_req, res) => {
   }
 });
 
-// POST /users -> thêm user mới
-router.post('/', async (req, res) => {
-  try {
-    const { name, email } = req.body;
-    const user = await User.create({ name, email });
-    res.status(201).json(user);
-  } catch (e) {
-    res.status(500).json({ message: e.message });
-  }
-});
+// POST /users
+router.post('/', userController.createUser);
 
 module.exports = router;
