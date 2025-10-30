@@ -8,11 +8,12 @@ const UserSchema = new mongoose.Schema(
       trim: true,
       lowercase: true,
       unique: true,
-      sparse: true, // cho phép nhiều user không có email mà không vi phạm unique
+      sparse: true,
       index: true,
+      required: true,
     },
-    // Mật khẩu (hash), không required để không phá vỡ API tạo user hiện tại
-    password: { type: String, select: false },
+    password: { type: String, required: true, select: false },
+    role: { type: String, enum: ['user', 'admin'], default: 'user' },
   },
   { timestamps: true }
 );
