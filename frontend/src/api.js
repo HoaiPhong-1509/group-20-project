@@ -1,15 +1,57 @@
+// Small helper to handle fetch with JSON and cookies (dev proxy -> same origin)
+async function request(path, options = {}) {
+  const res = await fetch(path, {
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+    ...options,
+  });
+  if (!res.ok) {
+    let msg = 'Request failed';
+    try {
+      const data = await res.json();
+      msg = data?.message || msg;
+    } catch (_) {}
+    throw new Error(msg);
+  }
+  // Some endpoints may return empty JSON
+  try {
+    return await res.json();
+  } catch (_) {
+    return null;
+  }
+}
+
+// Users
 export async function getUsers() {
-  const res = await fetch('/users');
-  if (!res.ok) throw new Error('Failed to load users');
-  return res.json();
+  return request('/users');
 }
 
 export async function createUser({ name, email }) {
-  const res = await fetch('/users', {
+  return request('/users', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, email }),
   });
-  if (!res.ok) throw new Error('Failed to create user');
-  return res.json();
+}
+
+// Auth
+export async function signup({ name, email, password }) {
+  return request('/auth/signup', {
+    method: 'POST',
+    body: JSON.stringify({ name, email, password }),
+  });
+}
+
+export async function login({ email, password }) {
+  return request('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+export async function logout() {
+  return request('/auth/logout', { method: 'POST' });
+}
+
+export async function getMe() {
+  return request('/auth/me');
 }
