@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
+import { getUsers } from "../api";
 
 export default function UserList() {
   const [users, setUsers] = useState([]);
 
   const load = async () => {
-    const res = await fetch("/users");
-    const data = await res.json();
+    const data = await getUsers();
     setUsers(data);
   };
 
