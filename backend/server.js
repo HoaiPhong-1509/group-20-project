@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 const cookieParser = require('cookie-parser');
+const profileRoutes = require('./routes/profile');
 
 dotenv.config({ path: path.join(__dirname, '.env') });
 
@@ -12,6 +13,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(cors({ origin: 'http://localhost:3000' }));
 app.use((req, _res, next) => { console.log('> ' + req.method, req.originalUrl); next(); });
+app.use('/api/profile', profileRoutes);
 
 const MONGO_URI = process.env.MONGO_URI;
 if (!MONGO_URI) {
