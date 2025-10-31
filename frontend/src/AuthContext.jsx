@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { login as apiLogin, signup as apiSignup, logout as apiLogout, getMe } from './api';
+import { login as apiLogin, signup as apiSignup, logout as apiLogout, getMe, updateProfile as apiUpdateProfile } from './api';
 
 const AuthContext = createContext(null);
 
@@ -46,7 +46,20 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
-  const value = { user, loading, error, login, signup, logout };
+  const refresh = useCallback(async () => {
+    const me = await getMe();
+    setUser(me);
+    return me;
+  }, []);
+
+  const updateProfile = useCallback(async (payload) => {
+    // Call backend to update, then reflect into context's user immediately
+    const updated = await apiUpdateProfile(payload);
+    setUser((prev) => ({ ...(prev || {}), ...updated }));
+    return updated;
+  }, []);
+
+  const value = { user, loading, error, login, signup, logout, refresh, updateProfile };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
