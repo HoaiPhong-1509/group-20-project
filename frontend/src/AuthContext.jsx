@@ -46,7 +46,14 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
-  const value = { user, loading, error, login, signup, logout };
+  // Thêm hàm refresh để tải lại thông tin đăng nhập
+  const refresh = useCallback(async () => {
+    const me = await getMe();
+    setUser(me);
+    return me;
+  }, []);
+
+  const value = { user, loading, error, login, signup, logout, refresh };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

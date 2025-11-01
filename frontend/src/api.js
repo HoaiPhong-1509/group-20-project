@@ -55,3 +55,15 @@ export async function logout() {
 export async function getMe() {
   return request('/auth/me');
 }
+
+// Profile
+export async function getProfile() {
+  return request('/api/profile');
+}
+
+export async function updateProfile(payload) {
+  return request('/api/profile', {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  });
+}
