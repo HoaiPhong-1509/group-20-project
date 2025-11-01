@@ -42,7 +42,7 @@ async function signup(req, res) {
 
     const token = signToken({ sub: user._id.toString() });
     setAuthCookie(res, token);
-    res.status(201).json({ _id: user._id, name: user.name, email: user.email });
+    res.status(201).json({ _id: user._id, name: user.name, email: user.email, role: user.role });
   } catch (err) {
     if (err?.code === 11000) return res.status(409).json({ message: 'Email already in use' });
     res.status(500).json({ message: err.message });
@@ -64,7 +64,7 @@ async function login(req, res) {
 
     const token = signToken({ sub: user._id.toString() });
     setAuthCookie(res, token);
-    res.json({ _id: user._id, name: user.name, email: user.email });
+    res.json({ _id: user._id, name: user.name, email: user.email, role: user.role });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

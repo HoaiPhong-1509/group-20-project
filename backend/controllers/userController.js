@@ -9,22 +9,26 @@ exports.getUsers = async (_req, res) => {
     res.status(500).json({ message: err.message });
   }
 };
-// PUT: sửa user 
-exports.updateUser = (req, res) => { 
-const { id } = req.params; 
-const index = users.findIndex(u => u.id == id); 
-if (index !== -1) { 
-users[index] = { ...users[index], ...req.body }; 
-res.json(users[index]); 
-} else { 
-res.status(404).json({ message: "User not found" }); 
-} 
-}; 
-// DELETE: xóa user 
-exports.deleteUser = (req, res) => { 
-const { id } = req.params; 
-users = users.filter(u => u.id != id); 
-res.json({ message: "User deleted" }); 
+
+// DELETE: xóa user (admin only)
+exports.deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) return res.status(400).json({ message: 'User id is required' });
+
+    // tránh tự xóa chính mình
+    if (req.user && String(req.user._id) === String(id)) {
+      return res.status(400).json({ message: 'You cannot delete your own account' });
+    }
+
+    const deleted = await User.findByIdAndDelete(id);
+    if (!deleted) return res.status(404).json({ message: 'User not found' });
+
+    return res.json({ message: 'User deleted' });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
 };
 
 exports.createUser = async (req, res) => {
@@ -79,7 +83,7 @@ exports.updateMyProfile = async (req, res) => {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const allowedFields = ['name', 'email']; // tùy schema của bạn
+    const allowedFields = ['name', 'email'];
     const updates = {};
     for (const key of allowedFields) {
       if (Object.prototype.hasOwnProperty.call(req.body, key)) {
@@ -91,7 +95,6 @@ exports.updateMyProfile = async (req, res) => {
       return res.status(400).json({ message: 'No valid fields to update' });
     }
 
-    // Nếu cập nhật email, kiểm tra trùng
     if (updates.email) {
       const exists = await require('../models/User').findOne({
         email: updates.email,
@@ -117,7 +120,6 @@ exports.updateMyProfile = async (req, res) => {
 
     return res.json(sanitized);
   } catch (err) {
-    // ví dụ lỗi Mongo duplicate key
     if (err?.code === 11000) {
       return res.status(409).json({ message: 'Duplicate value', error: err.keyValue });
     }

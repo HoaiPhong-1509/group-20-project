@@ -1,21 +1,17 @@
 const express = require('express');
-const User = require('../models/User');
-
 const router = express.Router();
+
+const auth = require('../middleware/auth');
+const { requireRole } = require('../middleware/rbac');
 const userController = require('../controllers/userController');
 
-// GET /users -> lấy tất cả user từ Mongo
-router.get('/', async (_req, res) => {
-  try {
-    const users = await User.find().sort({ createdAt: -1 });
-    res.json(users);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
+// GET /users -> admin only
+router.get('/', auth, requireRole('admin'), userController.getUsers);
 
-// POST /users
-router.post('/', userController.createUser);
+// POST /users -> admin only (khuyến nghị)
+router.post('/', auth, requireRole('admin'), userController.createUser);
+
+// DELETE /users/:id -> admin only
+router.delete('/:id', auth, requireRole('admin'), userController.deleteUser);
 
 module.exports = router;

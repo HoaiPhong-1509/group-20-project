@@ -17,7 +17,7 @@ function Main() {
         <h1>React Frontend - User Management</h1>
         {user ? (
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <span>Xin chào, {user.name || user.email}</span>
+            <span>Xin chào, {user.name || user.email} {user.role ? `(${user.role})` : ''}</span>
             <button onClick={logout}>Đăng xuất</button>
           </div>
         ) : null}
@@ -30,9 +30,15 @@ function Main() {
         </div>
       ) : (
         <>
-          <AddUser />
-          <hr />
-          <UserList />
+          {user.role === 'admin' ? (
+            <>
+              <AddUser />
+              <hr />
+              <UserList />
+            </>
+          ) : (
+            <div style={{ padding: 16 }}>Bạn không có quyền xem danh sách người dùng.</div>
+          )}
         </>
       )}
     </div>
@@ -48,4 +54,3 @@ function App() {
 }
 
 export default App;
-
