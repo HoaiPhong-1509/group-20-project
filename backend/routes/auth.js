@@ -11,8 +11,8 @@ router.post('/logout', authController.logout);
 
 // test nhanh router có được mount chưa
 router.get('/me', auth, (req, res) => {
-  const { _id, name, email } = req.user;
-  res.json({ _id, name, email });
+  const { _id, name, email, role } = req.user;
+  res.json({ _id, name, email, role });
 });
 
 module.exports = router;
