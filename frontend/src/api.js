@@ -21,9 +21,18 @@ async function request(path, options = {}) {
   }
 }
 
+const BASE = process.env.REACT_APP_API_URL || '';
+
 // Users
-export async function getUsers() {
-  return request('/users');
+export async function getUsers(token) {
+    const res = await fetch(`${BASE}/users`, {
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: token ? `Bearer ${token}` : '',
+        },
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
 }
 
 export async function createUser({ name, email }) {
@@ -31,6 +40,18 @@ export async function createUser({ name, email }) {
     method: 'POST',
     body: JSON.stringify({ name, email }),
   });
+}
+
+export async function deleteUser(userId, token) {
+    const res = await fetch(`${BASE}/users/${userId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: token ? `Bearer ${token}` : '',
+        },
+    });
+    if (!res.ok) throw new Error(await res.text());
+    return res.json();
 }
 
 // Auth
