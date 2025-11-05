@@ -1,7 +1,8 @@
 // controllers/userController.js
 const User = require('../models/User');
+const cloudinary = require('../services/cloudinary');
 
-exports.getUsers = async (_req, res) => {
+const getUsers = async (_req, res) => {
   try {
     const users = await User.find().sort({ createdAt: -1 });
     res.json(users);
@@ -11,7 +12,7 @@ exports.getUsers = async (_req, res) => {
 };
 
 // DELETE: xóa user (admin only)
-exports.deleteUser = async (req, res) => {
+const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -31,7 +32,7 @@ exports.deleteUser = async (req, res) => {
   }
 };
 
-exports.createUser = async (req, res) => {
+const createUser = async (req, res) => {
   try {
     const { name, email } = req.body;
     if (!name?.trim()) return res.status(400).json({ message: 'Name is required' });
@@ -45,7 +46,7 @@ exports.createUser = async (req, res) => {
   }
 };
 
-exports.getMyProfile = async (req, res) => {
+const getMyProfile = async (req, res) => {
   try {
     const userId =
       req.user?.id ||
@@ -71,7 +72,7 @@ exports.getMyProfile = async (req, res) => {
   }
 };
 
-exports.updateMyProfile = async (req, res) => {
+const updateMyProfile = async (req, res) => {
   try {
     const userId =
       req.user?.id ||
@@ -125,4 +126,54 @@ exports.updateMyProfile = async (req, res) => {
     }
     return res.status(500).json({ message: 'Server error', error: err.message });
   }
+};
+
+const uploadAvatar = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'Avatar file is required.' });
+    }
+
+    const userId = req.user?.id || req.user?._id;
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
+
+    const uploadResult = await new Promise((resolve, reject) => {
+      const stream = cloudinary.uploader.upload_stream(
+        {
+          folder: process.env.CLOUDINARY_AVATAR_FOLDER || 'avatars',
+          resource_type: 'image',
+          overwrite: true
+        },
+        (error, result) => (error ? reject(error) : resolve(result))
+      );
+
+      stream.end(req.file.buffer);
+    });
+
+    if (user.avatarPublicId && user.avatarPublicId !== uploadResult.public_id) {
+      cloudinary.uploader.destroy(user.avatarPublicId).catch((err) => {
+        console.warn('Failed to delete previous avatar:', err.message);
+      });
+    }
+
+    user.avatarUrl = uploadResult.secure_url;
+    user.avatarPublicId = uploadResult.public_id;
+    await user.save();
+
+    return res.status(200).json({ avatarUrl: user.avatarUrl });
+  } catch (error) {
+    return next(error);
+  }
+};
+
+module.exports = {
+  getUsers,
+  deleteUser,
+  createUser,
+  getMyProfile,
+  updateMyProfile,
+  uploadAvatar
 };

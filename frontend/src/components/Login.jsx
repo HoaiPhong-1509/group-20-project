@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../AuthContext';
+import { Link } from 'react-router-dom';
 
 export default function Login() {
   const { login } = useAuth();
@@ -41,6 +42,10 @@ export default function Login() {
       />
       {error ? <div style={{ color: 'crimson' }}>{error}</div> : null}
       <button disabled={submitting} type="submit">{submitting ? 'Đang đăng nhập...' : 'Đăng nhập'}</button>
+      <div className="auth-links">
+        <Link to="/signup">Chưa có tài khoản?</Link>
+        <Link to="/forgot-password">Quên mật khẩu?</Link>
+      </div>
     </form>
   );
 }

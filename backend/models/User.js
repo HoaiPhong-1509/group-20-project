@@ -18,4 +18,11 @@ const UserSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+UserSchema.add({
+  resetPasswordToken: { type: String, default: null },
+  resetPasswordExpires: { type: Date, default: null },
+  avatarUrl: { type: String, default: null },
+  avatarPublicId: { type: String, default: null },
+});
+
 module.exports = mongoose.model('User', UserSchema);

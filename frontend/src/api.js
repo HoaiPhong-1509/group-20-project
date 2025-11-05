@@ -88,3 +88,28 @@ export async function updateProfile(payload) {
     body: JSON.stringify(payload),
   });
 }
+
+const getApiBaseUrl = () => process.env.REACT_APP_API_URL || 'http://localhost:5000';
+
+export const forgotPassword = async (email) => {
+  const res = await fetch(`${getApiBaseUrl()}/auth/forgot-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email })
+  });
+  if (!res.ok) throw await res.json();
+  return res.json();
+};
+
+export const uploadAvatar = async (token, file) => {
+  const formData = new FormData();
+  formData.append('avatar', file);
+
+  const res = await fetch(`${getApiBaseUrl()}/users/me/avatar`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: formData
+  });
+  if (!res.ok) throw await res.json();
+  return res.json();
+};
