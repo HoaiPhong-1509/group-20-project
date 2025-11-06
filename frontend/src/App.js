@@ -6,6 +6,7 @@ import Login from "./components/Login";
 import Signup from "./components/Signup";
 import { AuthProvider, useAuth } from "./AuthContext";
 import Profile from "./components/Profile";
+import ForgotPassword from './components/ForgotPassword';
 
 function Main() {
   const { user, loading, logout } = useAuth();
@@ -42,6 +43,7 @@ function Main() {
         <div>
           <Login />
           <Signup />
+          <ForgotPassword />
         </div>
       ) : (
         <>
