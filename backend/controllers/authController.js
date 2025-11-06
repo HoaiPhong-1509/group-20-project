@@ -104,6 +104,10 @@ const forgotPassword = async (req, res, next) => {
     const baseUrl = process.env.FRONTEND_BASE_URL || 'http://localhost:3000';
     const resetUrl = `${baseUrl.replace(/\/$/, '')}/reset-password?token=${token}`;
 
+    // 🟢 LOG TOKEN ĐỂ TEST (XÓA SAU KHI PRODUCTION)
+    console.log('🔑 RESET TOKEN (use this in Postman):', token);
+    console.log('🔗 RESET URL:', resetUrl);
+
     await sendPasswordResetEmail({ to: user.email, resetUrl });
 
     return res.status(200).json({ message: responseMessage });

@@ -1,7 +1,14 @@
-// controllers/userController.js
 const User = require('../models/User');
 const cloudinary = require('../services/cloudinary');
+const multer = require('multer');
 
+// ⚙️ Cấu hình multer để lưu file trong RAM
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
+
+/**
+ * Lấy danh sách tất cả user (admin only)
+ */
 const getUsers = async (_req, res) => {
   try {
     const users = await User.find().sort({ createdAt: -1 });
@@ -11,7 +18,9 @@ const getUsers = async (_req, res) => {
   }
 };
 
-// DELETE: xóa user (admin only)
+/**
+ * Xóa user (admin only)
+ */
 const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
@@ -32,13 +41,16 @@ const deleteUser = async (req, res) => {
   }
 };
 
+/**
+ * Tạo user mới
+ */
 const createUser = async (req, res) => {
   try {
     const { name, email } = req.body;
     if (!name?.trim()) return res.status(400).json({ message: 'Name is required' });
     const user = await User.create({
       name: name.trim(),
-      ...(email ? { email: email.trim() } : {})
+      ...(email ? { email: email.trim() } : {}),
     });
     res.status(201).json(user);
   } catch (err) {
@@ -46,6 +58,9 @@ const createUser = async (req, res) => {
   }
 };
 
+/**
+ * Lấy thông tin profile cá nhân
+ */
 const getMyProfile = async (req, res) => {
   try {
     const userId =
@@ -58,9 +73,7 @@ const getMyProfile = async (req, res) => {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    const user = await require('../models/User')
-      .findById(userId)
-      .select('-password -__v');
+    const user = await User.findById(userId).select('-password -__v');
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -72,6 +85,9 @@ const getMyProfile = async (req, res) => {
   }
 };
 
+/**
+ * Cập nhật profile người dùng
+ */
 const updateMyProfile = async (req, res) => {
   try {
     const userId =
@@ -97,7 +113,7 @@ const updateMyProfile = async (req, res) => {
     }
 
     if (updates.email) {
-      const exists = await require('../models/User').findOne({
+      const exists = await User.findOne({
         email: updates.email,
         _id: { $ne: userId },
       });
@@ -106,7 +122,6 @@ const updateMyProfile = async (req, res) => {
       }
     }
 
-    const User = require('../models/User');
     const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -128,6 +143,9 @@ const updateMyProfile = async (req, res) => {
   }
 };
 
+/**
+ * Upload avatar lên Cloudinary
+ */
 const uploadAvatar = async (req, res, next) => {
   try {
     if (!req.file) {
@@ -140,40 +158,44 @@ const uploadAvatar = async (req, res, next) => {
       return res.status(404).json({ message: 'User not found.' });
     }
 
+    // 🟦 Upload ảnh bằng stream (do multer.memoryStorage)
     const uploadResult = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
         {
           folder: process.env.CLOUDINARY_AVATAR_FOLDER || 'avatars',
           resource_type: 'image',
-          overwrite: true
+          overwrite: true,
         },
         (error, result) => (error ? reject(error) : resolve(result))
       );
-
       stream.end(req.file.buffer);
     });
 
+    // 🗑 Xóa ảnh cũ trên Cloudinary (nếu có)
     if (user.avatarPublicId && user.avatarPublicId !== uploadResult.public_id) {
       cloudinary.uploader.destroy(user.avatarPublicId).catch((err) => {
-        console.warn('Failed to delete previous avatar:', err.message);
+        console.warn('⚠️ Failed to delete previous avatar:', err.message);
       });
     }
 
+    // 🔄 Lưu link mới
     user.avatarUrl = uploadResult.secure_url;
     user.avatarPublicId = uploadResult.public_id;
     await user.save();
 
     return res.status(200).json({ avatarUrl: user.avatarUrl });
   } catch (error) {
+    console.error('❌ Upload avatar error:', error);
     return next(error);
   }
 };
 
 module.exports = {
+  upload,
   getUsers,
   deleteUser,
   createUser,
   getMyProfile,
   updateMyProfile,
-  uploadAvatar
+  uploadAvatar,
 };
