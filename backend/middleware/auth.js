@@ -1,20 +1,16 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
 
-const COOKIE_NAME = 'token';
-
-module.exports = async function auth(req, res, next) {
+function auth(req, res, next) {
   try {
-    const token = req.cookies?.[COOKIE_NAME];
-    if (!token) return res.status(401).json({ message: 'Unauthorized' });
-
-    const payload = jwt.verify(token, process.env.JWT_SECRET || '');
-    const user = await User.findById(payload.sub);
-    if (!user) return res.status(401).json({ message: 'Unauthorized' });
-
-    req.user = user;
+    const header = req.headers.authorization || '';
+    const [scheme, token] = header.split(' ');
+    if (!token || scheme !== 'Bearer') return res.status(401).json({ message: 'No token provided' });
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = { id: payload.id, role: payload.role };
     next();
-  } catch (_err) {
-    return res.status(401).json({ message: 'Unauthorized' });
+  } catch (e) {
+    return res.status(401).json({ message: 'Invalid or expired token' });
   }
-};
+}
+
+module.exports = auth;

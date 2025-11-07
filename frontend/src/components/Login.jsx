@@ -42,8 +42,12 @@ export default function Login() {
       />
       {error ? <div style={{ color: 'crimson' }}>{error}</div> : null}
       <button disabled={submitting} type="submit">{submitting ? 'Đang đăng nhập...' : 'Đăng nhập'}</button>
+<<<<<<< HEAD
       <div className="auth-links">
         <Link to="/signup">Chưa có tài khoản?</Link>
+=======
+      <div style={{ marginTop: 8 }}>
+>>>>>>> 9459f33e (finish hd 4)
         <Link to="/forgot-password">Quên mật khẩu?</Link>
       </div>
     </form>

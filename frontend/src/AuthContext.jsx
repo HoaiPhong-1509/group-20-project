@@ -1,10 +1,14 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
-import { login as apiLogin, signup as apiSignup, logout as apiLogout, getMe } from './api';
+import { getMe, login as apiLogin, signup as apiSignup, logout as apiLogout } from './api';
 
-const AuthContext = createContext(null);
+export const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const raw = localStorage.getItem('user');
+    return raw ? JSON.parse(raw) : null;
+  });
+  const [token, setToken] = useState(() => localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -30,6 +34,9 @@ export function AuthProvider({ children }) {
     setError(null);
     const u = await apiLogin({ email, password });
     setUser(u);
+    setToken(u.token);
+    localStorage.setItem('user', JSON.stringify(u));
+    localStorage.setItem('token', u.token);
     return u;
   }, []);
 
@@ -37,23 +44,52 @@ export function AuthProvider({ children }) {
     setError(null);
     const u = await apiSignup({ name, email, password });
     setUser(u);
+    setToken(u.token);
+    localStorage.setItem('user', JSON.stringify(u));
+    localStorage.setItem('token', u.token);
     return u;
   }, []);
 
   const logout = useCallback(async () => {
     setError(null);
-    await apiLogout();
+    try { await apiLogout(); } catch (_) {}
     setUser(null);
+    setToken(null);
+    localStorage.removeItem('user');
+    localStorage.removeItem('token');
   }, []);
 
-  // Thêm hàm refresh để tải lại thông tin đăng nhập
-  const refresh = useCallback(async () => {
+  // NEW: cập nhật user cục bộ và lưu localStorage
+  const updateUser = useCallback((partial) => {
+    setUser((prev) => {
+      const next = { ...(prev || {}), ...(partial || {}) };
+      try { localStorage.setItem('user', JSON.stringify(next)); } catch {}
+      return next;
+    });
+  }, []);
+
+  // NEW: gọi /auth/me và đồng bộ lại user vào context
+  const refreshMe = useCallback(async () => {
     const me = await getMe();
-    setUser(me);
+    setUser((prev) => {
+      const next = { ...(prev || {}), ...(me || {}) };
+      try { localStorage.setItem('user', JSON.stringify(next)); } catch {}
+      return next;
+    });
     return me;
   }, []);
 
-  const value = { user, loading, error, login, signup, logout, refresh };
+  const value = {
+    user,
+    token,
+    loading,
+    error,
+    login,
+    signup,
+    logout,
+    updateUser,   // NEW
+    refreshMe,    // NEW
+  };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

@@ -4,18 +4,26 @@ import { createUser } from "../api";
 export default function AddUser() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState("user");
+  const [submitting, setSubmitting] = useState(false);
 
   const onSubmit = async (e) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim()) return;
+    if (!name.trim() || !email.trim() || password.length < 6) return;
+    setSubmitting(true);
     try {
-      await createUser({ name: name.trim(), email: email.trim() });
+      await createUser({ name: name.trim(), email: email.trim(), password, role });
       setName("");
       setEmail("");
+      setPassword("");
+      setRole("user");
       window.dispatchEvent(new Event("users-updated"));
     } catch (err) {
       console.error(err);
-      alert("Create user failed");
+      alert(err.message || "Create user failed");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -40,7 +48,17 @@ export default function AddUser() {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
-      <button type="submit">Add</button>
+      <input
+        type="password"
+        placeholder="Temp password (>=6 chars)"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
+      <select value={role} onChange={(e) => setRole(e.target.value)}>
+        <option value="user">user</option>
+        <option value="admin">admin</option>
+      </select>
+      <button type="submit" disabled={submitting}>{submitting ? 'Saving...' : 'Add'}</button>
     </form>
   );
 }

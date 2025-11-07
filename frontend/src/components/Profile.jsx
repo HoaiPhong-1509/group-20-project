@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getProfile, updateProfile, uploadAvatar } from '../api';
 import { useAuth } from '../AuthContext';
+import UpdateAvatar from './UpdateAvatar';
 
 export default function Profile() {
   const { user, refresh, token, refreshUser } = useAuth();
@@ -9,10 +10,15 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState(null);
   const [err, setErr] = useState(null);
+<<<<<<< HEAD
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarError, setAvatarError] = useState('');
   const [avatarMessage, setAvatarMessage] = useState('');
+=======
+  const [avatarUrl, setAvatarUrl] = React.useState(/* có thể lấy từ user/profile hiện có */ undefined);
+  const [profile, setProfile] = useState(null);
+>>>>>>> 9459f33e (finish hd 4)
 
   useEffect(() => {
     let mounted = true;
@@ -21,6 +27,7 @@ export default function Profile() {
         const p = await getProfile();
         if (mounted) {
           setForm({ name: p.name || '', email: p.email || '' });
+          setProfile(p);
         }
       } catch (e) {
         setErr(e.message || 'Không tải được hồ sơ');
@@ -30,6 +37,12 @@ export default function Profile() {
     })();
     return () => { mounted = false; };
   }, []);
+
+  useEffect(() => {
+    if (user?.avatarUrl) {
+      setProfile((prev) => prev ? { ...prev, avatarUrl: user.avatarUrl } : prev);
+    }
+  }, [user?.avatarUrl]);
 
   const onChange = (e) => {
     setForm((s) => ({ ...s, [e.target.name]: e.target.value }));
@@ -77,7 +90,11 @@ export default function Profile() {
   if (loading) return <div style={{ padding: 12 }}>Đang tải hồ sơ…</div>;
 
   return (
+<<<<<<< HEAD
     <div className="profile-page">
+=======
+    <div>
+>>>>>>> 9459f33e (finish hd 4)
       <section style={{ padding: 16, border: '1px solid #eee', margin: 16 }}>
         <h2>Hồ sơ cá nhân</h2>
         <form onSubmit={onSubmit} style={{ display: 'grid', gap: 8, maxWidth: 420, margin: '0 auto' }}>
@@ -94,6 +111,7 @@ export default function Profile() {
           <button type="submit" disabled={saving}>{saving ? 'Đang lưu…' : 'Lưu thay đổi'}</button>
         </form>
       </section>
+<<<<<<< HEAD
       <section className="profile-avatar-section">
         <h3>Ảnh đại diện</h3>
         <img
@@ -114,6 +132,14 @@ export default function Profile() {
         {avatarMessage && <p className="auth-success">{avatarMessage}</p>}
         {avatarError && <p className="auth-error">{avatarError}</p>}
       </section>
+=======
+      <UpdateAvatar currentAvatarUrl={avatarUrl} onUpdated={(url) => setAvatarUrl(url)} />
+      <img
+        className="avatar"
+        src={(profile?.avatarUrl || user?.avatarUrl) ? `${profile?.avatarUrl || user?.avatarUrl}` : '/default-avatar.png'}
+        alt="avatar"
+      />
+>>>>>>> 9459f33e (finish hd 4)
     </div>
   );
 }
