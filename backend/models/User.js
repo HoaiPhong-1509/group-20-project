@@ -14,15 +14,6 @@ const UserSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-<<<<<<< HEAD
-UserSchema.add({
-  resetPasswordToken: { type: String, default: null },
-  resetPasswordExpires: { type: Date, default: null },
-  avatarUrl: { type: String, default: null },
-  avatarPublicId: { type: String, default: null },
-});
-
-=======
 UserSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   try {
@@ -38,5 +29,4 @@ UserSchema.methods.comparePassword = function (plain) {
   return bcrypt.compare(plain, this.password);
 };
 
->>>>>>> 9459f33e (finish hd 4)
 module.exports = mongoose.model('User', UserSchema);
