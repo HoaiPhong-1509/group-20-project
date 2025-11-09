@@ -9,6 +9,17 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 
+// Mongoose connection event handlers - these print clear messages to stdout
+// so hosting providers like Railway will show obvious success/failure logs.
+mongoose.connection.on('connected', () => {
+  console.log(`✅ [mongoose] connected (readyState=${mongoose.connection.readyState})`);
+});
+mongoose.connection.on('error', (err) => {
+  console.error('❌ [mongoose] connection error:', err && err.message ? err.message : err);
+});
+mongoose.connection.on('disconnected', () => {
+  console.log('⚠️ [mongoose] disconnected');
+});
 // (Tuỳ chọn) Cloudinary nếu cần khởi tạo
 // const cloudinary = require('./services/cloudinary');
 
