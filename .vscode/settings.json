@@ -1,0 +1,21 @@
+{
+  // Hide node_modules in explorer/search to reduce noise
+  "files.exclude": {
+    "**/node_modules": true
+  },
+  "search.exclude": {
+    "**/node_modules": true
+  },
+  "files.watcherExclude": {
+    "**/node_modules/**": true
+  },
+
+  // Reduce automatic type acquisition (can cause package TS files to be scanned)
+  "typescript.disableAutomaticTypeAcquisition": true,
+
+  // Keep TypeScript/JS validation enabled for your workspace files but prevent
+  // the editor from treating dependency tsconfig files as workspace configs.
+  // (This doesn't edit node_modules; it just reduces noise in the editor.)
+  "typescript.validate.enable": true,
+  "javascript.validate.enable": true
+}

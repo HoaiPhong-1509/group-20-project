@@ -45,11 +45,47 @@ app.get('/', (_req, res) => res.json({ message: 'Server running' }));
 
 // Start server sau khi Mongo kết nối
 const PORT = process.env.PORT || 5000;
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => {
-    app.listen(PORT, () => console.log(`Server running on ${PORT}`));
-  })
-  .catch(err => {
-    console.error('Mongo connection error:', err);
-    process.exit(1);
-  });
+// Accept either MONGODB_URI (common) or MONGO_URI (existing in this project)
+const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI;
+if (!mongoUri) {
+  console.error('Missing MongoDB connection string. Set MONGODB_URI or MONGO_URI.');
+  process.exit(1);
+}
+// Connect with retry and clearer logging
+async function startServer() {
+  // try to extract host(s) from the connection string for logging (don't print credentials)
+  const hostMatch = mongoUri.match(/@([^/?]+)/);
+  const hosts = hostMatch ? hostMatch[1] : 'unknown-host';
+  console.log(`Attempting to connect to MongoDB host(s): ${hosts}`);
+
+  const maxRetries = 5;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      await mongoose.connect(mongoUri);
+      console.log('✅ MongoDB connected successfully');
+      app.listen(PORT, () => console.log(`Server running on ${PORT}`));
+      return;
+    } catch (err) {
+      const msg = err && err.message ? err.message : String(err);
+      console.error(`MongoDB connection attempt ${attempt} failed: ${msg}`);
+
+      // Provide actionable hints for common problems
+      if (/authentication failed|bad auth/i.test(msg) || (err && err.codeName === 'AtlasError')) {
+        console.error('❌ Authentication failed. Check your MongoDB user, password, and that the password is URL-encoded if it contains special characters.');
+        console.error('Also verify the user has proper roles and that your Atlas IP Access List allows your server IP (or 0.0.0.0/0 for testing).');
+        process.exit(1);
+      }
+
+      if (attempt < maxRetries) {
+        const delay = attempt * 2000; // exponential-ish backoff
+        console.log(`Retrying connection in ${delay / 1000}s... (${attempt + 1}/${maxRetries})`);
+        await new Promise(r => setTimeout(r, delay));
+      } else {
+        console.error('Exceeded max retries connecting to MongoDB. Exiting.');
+        process.exit(1);
+      }
+    }
+  }
+}
+
+startServer();
